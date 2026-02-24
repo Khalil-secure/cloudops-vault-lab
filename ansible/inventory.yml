@@ -1,0 +1,14 @@
+all:
+  hosts:
+    vault-server:
+      ansible_host: 34.38.153.196
+      ansible_user: medkhalilghiati
+      ansible_ssh_private_key_file: ~/.ssh/google_compute_engine
+    app-server:
+      ansible_host: 34.76.242.73
+      ansible_user: medkhalilghiati
+      ansible_ssh_private_key_file: ~/.ssh/google_compute_engine
+    db-server:
+      ansible_host: 34.76.147.232
+      ansible_user: medkhalilghiati
+      ansible_ssh_private_key_file: ~/.ssh/google_compute_engine
