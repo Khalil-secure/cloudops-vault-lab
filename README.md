@@ -216,8 +216,8 @@ Dashboard available at `http://YOUR_APP_SERVER_EXTERNAL_IP`
 
 ## 👤 Author
 
-**M. Khalil Ghiati** — Tech-Ops Integrator  
+**M. Khalil Ghiati**  
 Ingénieur diplômé en Électronique & Télécommunications  
-Specialized at the intersection of secure infrastructure and critical systems
+Specialized in infrastructure and critical systems
 
 [github.com/Khalil-secure](https://github.com/Khalil-secure) · 07 74 73 89 29
