@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudOps Vault Lab — Infrastructure Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --white: #ffffff;
+      --bg: #f4f6f9;
+      --bg2: #edf0f5;
+      --surface: #ffffff;
+      --border: #e2e7ef;
+      --border-strong: #c8d0de;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --blue: #1d4ed8;
+      --blue-light: #eff6ff;
+      --blue-mid: #dbeafe;
+      --green: #15803d;
+      --green-light: #f0fdf4;
+      --green-mid: #dcfce7;
+      --green-dot: #22c55e;
+      --red: #b91c1c;
+      --red-light: #fef2f2;
+      --red-mid: #fee2e2;
+      --red-dot: #ef4444;
+      --yellow: #b45309;
+      --yellow-light: #fffbeb;
+      --yellow-mid: #fef3c7;
+      --yellow-dot: #f59e0b;
+      --font: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --font-display: 'Fraunces', serif;
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+      --shadow: 0 4px 16px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 15px;
+    }
+
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 17px; font-weight: 600;
+      color: var(--text); letter-spacing: -0.3px;
+    }
+
+    .topbar-subtitle {
+      font-size: 11px; color: var(--text-muted);
+      font-family: var(--font-mono);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 20px; }
+
+    .env-badge {
+      background: var(--green-light); color: var(--green);
+      border: 1px solid var(--green-mid);
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      font-family: var(--font-mono); letter-spacing: 0.05em;
+    }
+
+    .topbar-time { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+
+    .refresh-btn {
+      background: var(--blue); color: white; border: none;
+      padding: 7px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-family: var(--font); font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .refresh-btn:hover { background: #1e40af; transform: translateY(-1px); box-shadow: var(--shadow); }
+
+    .refresh-icon { font-size: 14px; display: inline-block; }
+    .refresh-icon.spinning { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .main { max-width: 1320px; margin: 0 auto; padding: 32px 32px 64px; }
+
+    .page-header {
+      margin-bottom: 32px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+    }
+
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 300;
+      color: var(--text); letter-spacing: -0.5px; line-height: 1.2;
+    }
+
+    .page-header h1 em { font-style: italic; color: var(--blue); }
+
+    .last-updated { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-align: right; }
+
+    .summary-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 24px;
+    }
+
+    .summary-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+      opacity: 0; transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    .summary-card:nth-child(1) { animation-delay: 0.05s; }
+    .summary-card:nth-child(2) { animation-delay: 0.1s; }
+    .summary-card:nth-child(3) { animation-delay: 0.15s; }
+    .summary-card:nth-child(4) { animation-delay: 0.2s; }
+
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    .summary-label {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-muted); margin-bottom: 8px;
+    }
+
+    .summary-value {
+      font-family: var(--font-display);
+      font-size: 32px; font-weight: 600;
+      color: var(--text); line-height: 1; margin-bottom: 6px;
+    }
+
+    .summary-value.green { color: var(--green); }
+    .summary-value.blue { color: var(--blue); }
+    .summary-sub { font-size: 12px; color: var(--text-muted); }
+
+    .section-title {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted); margin-bottom: 12px; margin-top: 28px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+
+    .service-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      opacity: 0; transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+      position: relative; overflow: hidden;
+    }
+
+    .service-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--border); transition: background 0.3s ease;
+    }
+
+    .service-card.healthy::before { background: var(--green-dot); }
+    .service-card.unhealthy::before { background: var(--red-dot); }
+    .service-card.loading::before {
+      background: linear-gradient(90deg, var(--border) 25%, var(--blue) 50%, var(--border) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .service-card:nth-child(1) { animation-delay: 0.1s; }
+    .service-card:nth-child(2) { animation-delay: 0.15s; }
+    .service-card:nth-child(3) { animation-delay: 0.2s; }
+    .service-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--border-strong); }
+
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+
+    .card-icon-wrap {
+      width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; background: var(--bg);
+    }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      font-family: var(--font-mono); letter-spacing: 0.04em;
+    }
+
+    .status-pill.healthy { background: var(--green-light); color: var(--green); border: 1px solid var(--green-mid); }
+    .status-pill.unhealthy { background: var(--red-light); color: var(--red); border: 1px solid var(--red-mid); }
+    .status-pill.loading { background: var(--yellow-light); color: var(--yellow); border: 1px solid var(--yellow-mid); }
+
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .healthy .status-dot { background: var(--green-dot); animation: pulse-green 2s infinite; }
+    .unhealthy .status-dot { background: var(--red-dot); }
+    .loading .status-dot { background: var(--yellow-dot); animation: pulse-yellow 1s infinite; }
+
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+    }
+    @keyframes pulse-yellow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .card-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .card-type { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .card-meta { display: flex; flex-direction: column; gap: 0; }
+
+    .meta-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; border-bottom: 1px solid var(--bg2); font-size: 12px;
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-key { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; }
+    .meta-val { color: var(--text); font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+
+    .uptime-row { margin-top: 14px; }
+    .uptime-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+    .uptime-label span:last-child { color: var(--green); font-weight: 600; }
+    .uptime-bar { height: 4px; background: var(--bg2); border-radius: 2px; overflow: hidden; }
+    .uptime-fill { height: 100%; background: var(--green-dot); border-radius: 2px; transition: width 1s ease; }
+
+    .infra-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+
+    .infra-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+      opacity: 0; transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .infra-card:nth-child(1) { animation-delay: 0.25s; }
+    .infra-card:nth-child(2) { animation-delay: 0.3s; }
+    .infra-card:nth-child(3) { animation-delay: 0.35s; }
+
+    .infra-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--blue-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+
+    .infra-body { flex: 1; }
+    .infra-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .infra-detail { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+    .infra-status { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--green); }
+    .infra-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-dot); animation: pulse-green 2s infinite; }
+
+    .arch-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+      box-shadow: var(--shadow-sm);
+      opacity: 0; transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards; animation-delay: 0.4s;
+      margin-bottom: 24px;
+    }
+
+    .arch-title {
+      font-family: var(--font-display); font-size: 16px; font-weight: 600;
+      color: var(--text); margin-bottom: 28px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .arch-flow {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; flex-wrap: wrap; row-gap: 16px;
+    }
+
+    .arch-node { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+    .arch-box {
+      background: var(--bg); border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm); padding: 12px 20px;
+      text-align: center; min-width: 110px;
+      transition: all 0.2s ease; cursor: default;
+    }
+    .arch-box:hover { border-color: var(--blue); background: var(--blue-light); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .arch-box.highlight { background: var(--blue-light); border-color: var(--blue); }
+
+    .arch-box-icon { font-size: 20px; margin-bottom: 4px; }
+    .arch-box-name { font-size: 11px; font-weight: 600; color: var(--text); }
+    .arch-box-sub { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 1px; }
+
+    .arch-arrow { display: flex; flex-direction: column; align-items: center; padding: 0 8px; gap: 2px; }
+    .arch-arrow-line {
+      width: 40px; height: 2px;
+      background: linear-gradient(90deg, var(--border-strong), var(--blue), var(--border-strong));
+      position: relative;
+    }
+    .arch-arrow-line::after {
+      content: '▶'; position: absolute; right: -8px; top: -7px;
+      font-size: 10px; color: var(--blue);
+    }
+    .arch-arrow-label { font-size: 9px; color: var(--text-muted); font-family: var(--font-mono); white-space: nowrap; }
+    .arch-split { display: flex; flex-direction: column; gap: 12px; }
+
+    .security-banner {
+      background: var(--blue-light); border: 1px solid var(--blue-mid);
+      border-radius: var(--radius); padding: 16px 24px;
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px;
+      opacity: 0; transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards; animation-delay: 0.45s;
+    }
+
+    .security-icon { font-size: 22px; }
+    .security-text strong { font-size: 13px; font-weight: 600; color: var(--blue); display: block; margin-bottom: 2px; }
+    .security-text span { font-size: 12px; color: var(--text-secondary); }
+
+    .security-checks { margin-left: auto; display: flex; gap: 12px; }
+    .check-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--blue); font-weight: 500; }
+
+    .footer {
+      border-top: 1px solid var(--border); padding: 20px 32px;
+      background: var(--white);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+    }
+    .footer-left { display: flex; gap: 24px; }
+    .footer-item span { color: var(--text); font-weight: 500; }
+
+    @media (max-width: 1024px) {
+      .service-grid, .infra-grid { grid-template-columns: repeat(2, 1fr); }
+      .summary-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .service-grid, .infra-grid, .summary-row { grid-template-columns: 1fr; }
+      .security-checks { display: none; }
+      .main { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">☁</div>
+      <div>
+        <div class="topbar-title">CloudOps Vault Lab</div>
+        <div class="topbar-subtitle">Infrastructure Dashboard · GCP Europe-West1</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="env-badge">● PRODUCTION</div>
+      <div class="topbar-time" id="clock">--:--:--</div>
+      <button class="refresh-btn" onclick="loadStatus()">
+        <span class="refresh-icon" id="refresh-icon">↻</span> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="page-header">
+      <div>
+        <h1>Infrastructure <em>Status</em></h1>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Real-time health monitoring across all services and compute resources</div>
+      </div>
+      <div class="last-updated">
+        <div style="margin-bottom:2px;">Last refreshed</div>
+        <div id="last-updated" style="color:var(--text-secondary);">—</div>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-label">Services Online</div>
+        <div class="summary-value green" id="summary-online">—</div>
+        <div class="summary-sub">of 3 monitored services</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Compute Instances</div>
+        <div class="summary-value blue">3</div>
+        <div class="summary-sub">e2-small · europe-west1-b</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Secrets Stored</div>
+        <div class="summary-value blue">2</div>
+        <div class="summary-sub">Vault KV-v2 · cloudops/</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Security Posture</div>
+        <div class="summary-value green">CIS</div>
+        <div class="summary-sub">Benchmarks applied · Fail2ban active</div>
+      </div>
+    </div>
+
+    <div class="security-banner">
+      <div class="security-icon">🔒</div>
+      <div class="security-text">
+        <strong>Zero hardcoded credentials — Vault-native secrets management</strong>
+        <span>All database credentials are fetched at runtime from HashiCorp Vault. App tokens are read-only with least-privilege policies enforced.</span>
+      </div>
+      <div class="security-checks">
+        <div class="check-item">✓ SSH hardened</div>
+        <div class="check-item">✓ Deny-by-default firewall</div>
+        <div class="check-item">✓ Least-privilege IAM</div>
+        <div class="check-item">✓ Auth on all DBs</div>
+      </div>
+    </div>
+
+    <div class="section-title">Core Services</div>
+    <div class="service-grid">
+
+      <div class="service-card loading" id="card-vault">
+        <div class="card-top">
+          <div class="card-icon-wrap">🔐</div>
+          <div class="status-pill loading" id="pill-vault"><span class="status-dot"></span> CHECKING</div>
+        </div>
+        <div class="card-name">HashiCorp Vault</div>
+        <div class="card-type">Secrets Management Engine</div>
+        <div class="card-meta">
+          <div class="meta-row"><span class="meta-key">address</span><span class="meta-val">10.0.1.3:8200</span></div>
+          <div class="meta-row"><span class="meta-key">engine</span><span class="meta-val">kv-v2</span></div>
+          <div class="meta-row"><span class="meta-key">secrets</span><span class="meta-val">cloudops/postgres · cloudops/mongodb</span></div>
+          <div class="meta-row"><span class="meta-key">seal</span><span class="meta-val">shamir · threshold 3/5</span></div>
+        </div>
+        <div class="uptime-row">
+          <div class="uptime-label"><span>Availability</span><span>99.9%</span></div>
+          <div class="uptime-bar"><div class="uptime-fill" style="width:99.9%"></div></div>
+        </div>
+      </div>
+
+      <div class="service-card loading" id="card-postgres">
+        <div class="card-top">
+          <div class="card-icon-wrap">🐘</div>
+          <div class="status-pill loading" id="pill-postgres"><span class="status-dot"></span> CHECKING</div>
+        </div>
+        <div class="card-name">PostgreSQL 15</div>
+        <div class="card-type">Relational Database</div>
+        <div class="card-meta">
+          <div class="meta-row"><span class="meta-key">host</span><span class="meta-val">10.0.2.2:5432</span></div>
+          <div class="meta-row"><span class="meta-key">database</span><span class="meta-val">cloudops_db</span></div>
+          <div class="meta-row"><span class="meta-key">user</span><span class="meta-val">app_user (least-privilege)</span></div>
+          <div class="meta-row"><span class="meta-key">subnet</span><span class="meta-val">subnet-db · 10.0.2.0/24</span></div>
+        </div>
+        <div class="uptime-row">
+          <div class="uptime-label"><span>Availability</span><span>99.9%</span></div>
+          <div class="uptime-bar"><div class="uptime-fill" style="width:99.9%"></div></div>
+        </div>
+      </div>
+
+      <div class="service-card loading" id="card-mongodb">
+        <div class="card-top">
+          <div class="card-icon-wrap">🍃</div>
+          <div class="status-pill loading" id="pill-mongodb"><span class="status-dot"></span> CHECKING</div>
+        </div>
+        <div class="card-name">MongoDB 7.0</div>
+        <div class="card-type">Document Database</div>
+        <div class="card-meta">
+          <div class="meta-row"><span class="meta-key">host</span><span class="meta-val">10.0.2.2:27017</span></div>
+          <div class="meta-row"><span class="meta-key">auth</span><span class="meta-val">enabled · SCRAM-SHA-256</span></div>
+          <div class="meta-row"><span class="meta-key">user</span><span class="meta-val">app_user (readWrite)</span></div>
+          <div class="meta-row"><span class="meta-key">subnet</span><span class="meta-val">subnet-db · 10.0.2.0/24</span></div>
+        </div>
+        <div class="uptime-row">
+          <div class="uptime-label"><span>Availability</span><span>99.9%</span></div>
+          <div class="uptime-bar"><div class="uptime-fill" style="width:99.9%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Compute Resources</div>
+    <div class="infra-grid">
+      <div class="infra-card">
+        <div class="infra-icon">🖥️</div>
+        <div class="infra-body">
+          <div class="infra-name">app-server</div>
+          <div class="infra-detail">10.0.1.2 · subnet-app · e2-small · Debian 12</div>
+        </div>
+        <div class="infra-status"><span class="dot"></span> Running</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">🗄️</div>
+        <div class="infra-body">
+          <div class="infra-name">db-server</div>
+          <div class="infra-detail">10.0.2.2 · subnet-db · e2-small · Debian 12</div>
+        </div>
+        <div class="infra-status"><span class="dot"></span> Running</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">🔐</div>
+        <div class="infra-body">
+          <div class="infra-name">vault-server</div>
+          <div class="infra-detail">10.0.1.3 · subnet-app · e2-small · Debian 12</div>
+        </div>
+        <div class="infra-status"><span class="dot"></span> Running</div>
+      </div>
+    </div>
+
+    <div class="section-title">Network Architecture</div>
+    <div class="arch-card">
+      <div class="arch-title">
+        <span>🏗️</span> Traffic &amp; Secrets Flow
+        <span style="margin-left:auto; font-family:var(--font-mono); font-size:11px; color:var(--text-muted); font-weight:400;">GCP VPC · cloudops-vpc · europe-west1</span>
+      </div>
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="arch-box">
+            <div class="arch-box-icon">🌐</div>
+            <div class="arch-box-name">Internet</div>
+            <div class="arch-box-sub">Public</div>
+          </div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div class="arch-arrow-label">HTTP :80</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-box highlight">
+            <div class="arch-box-icon">🖥️</div>
+            <div class="arch-box-name">App Server</div>
+            <div class="arch-box-sub">10.0.1.2</div>
+          </div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div class="arch-arrow-label">API :8200</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-box highlight">
+            <div class="arch-box-icon">🔐</div>
+            <div class="arch-box-name">Vault</div>
+            <div class="arch-box-sub">10.0.1.3</div>
+          </div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div class="arch-arrow-label">credentials</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-split">
+            <div class="arch-box">
+              <div class="arch-box-icon">🐘</div>
+              <div class="arch-box-name">PostgreSQL</div>
+              <div class="arch-box-sub">10.0.2.2:5432</div>
+            </div>
+            <div class="arch-box">
+              <div class="arch-box-icon">🍃</div>
+              <div class="arch-box-name">MongoDB</div>
+              <div class="arch-box-sub">10.0.2.2:27017</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border); display:flex; gap:32px; flex-wrap:wrap;">
+        <div style="font-size:12px; color:var(--text-secondary);">
+          <span style="font-weight:600; color:var(--text);">subnet-app</span>
+          <span style="font-family:var(--font-mono); color:var(--text-muted);"> 10.0.1.0/24</span>
+          — App server + Vault
+        </div>
+        <div style="font-size:12px; color:var(--text-secondary);">
+          <span style="font-weight:600; color:var(--text);">subnet-db</span>
+          <span style="font-family:var(--font-mono); color:var(--text-muted);"> 10.0.2.0/24</span>
+          — DB server · isolated · no public access
+        </div>
+        <div style="font-size:12px; color:var(--text-secondary);">
+          <span style="font-weight:600; color:var(--text);">Firewall</span>
+          — deny-all-ingress default · SSH restricted · DB ports internal-only
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">
+      <div>Project <span>cloudops-vault-lab</span></div>
+      <div>Region <span>europe-west1</span></div>
+      <div>IaC <span>Terraform v1.5.7</span></div>
+      <div>Config <span>Ansible 13.4</span></div>
+      <div>Vault <span>v1.21.3</span></div>
+    </div>
+    <div>Built by <span>M. Khalil Ghiati</span> · Tech-Ops Integrator Portfolio · 2025</div>
+  </div>
+
+  <script>
+    function updateClock() {
+      document.getElementById('clock').textContent =
+        new Date().toUTCString().split(' ')[4] + ' UTC';
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function setCardStatus(id, pillId, ok) {
+      document.getElementById(id).className = 'service-card ' + (ok ? 'healthy' : 'unhealthy');
+      const pill = document.getElementById(pillId);
+      pill.className = 'status-pill ' + (ok ? 'healthy' : 'unhealthy');
+      pill.innerHTML = `<span class="status-dot"></span> ${ok ? 'HEALTHY' : 'UNREACHABLE'}`;
+    }
+
+    function loadStatus() {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('spinning');
+
+      ['card-vault','card-postgres','card-mongodb'].forEach(id => {
+        document.getElementById(id).className = 'service-card loading';
+      });
+      ['pill-vault','pill-postgres','pill-mongodb'].forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'status-pill loading';
+        el.innerHTML = '<span class="status-dot"></span> CHECKING';
+      });
+
+      fetch('/api/status')
+        .then(r => r.json())
+        .then(d => {
+          setCardStatus('card-vault', 'pill-vault', d.vault);
+          setCardStatus('card-postgres', 'pill-postgres', d.postgres);
+          setCardStatus('card-mongodb', 'pill-mongodb', d.mongodb);
+
+          const online = [d.vault, d.postgres, d.mongodb].filter(Boolean).length;
+          const el = document.getElementById('summary-online');
+          el.textContent = online;
+          el.className = 'summary-value ' + (online === 3 ? 'green' : online > 0 ? '' : 'red');
+
+          const t = new Date(d.timestamp + 'Z');
+          document.getElementById('last-updated').textContent =
+            t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        })
+        .catch(() => {
+          ['vault','postgres','mongodb'].forEach(s => setCardStatus('card-'+s, 'pill-'+s, false));
+          document.getElementById('summary-online').textContent = '0';
+          document.getElementById('last-updated').textContent = 'fetch failed';
+        })
+        .finally(() => icon.classList.remove('spinning'));
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 20000);
+  </script>
+</body>
+</html>
