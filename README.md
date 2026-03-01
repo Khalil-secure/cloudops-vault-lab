@@ -8,7 +8,7 @@
 [![Config](https://img.shields.io/badge/Ansible-13.4-red?logo=ansible)](https://ansible.com)
 [![Live](https://img.shields.io/badge/Dashboard-Live-brightgreen)](http://34.76.242.73)
 
-**🔴 Live Dashboard → [http://34.76.242.73](http://34.76.242.73)**
+**🔴 Live Health check → [http://34.76.242.73](http://34.76.242.73)**
 
 ---
 
